@@ -1,67 +1,178 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Keys FFH4X</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
-        .glass { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .gradient-text { background: linear-gradient(to right, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFH4X - Painel de Controle</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #0f172a; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .tab-active { border-bottom: 2px solid #6366f1; color: #6366f1; }
+    </style>
 </head>
-<body class="text-slate-200 min-h-screen flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-slate-950 to-slate-950">
+<body class="min-h-screen text-slate-200 p-4">
 
-    <div class="glass max-w-md w-full p-8 rounded-3xl text-center shadow-2xl border-indigo-500/30 border">
-        <h1 class="text-3xl font-black mb-2 gradient-text uppercase">Key Generator</h1>
-        <p class="text-slate-400 text-sm mb-8 uppercase tracking-widest font-bold">Sistema de Acesso Único</p>
-        
-        <div class="relative mb-6">
-            <input type="text" id="keyOutput" readonly placeholder="Sua Key aparecerá aqui..." 
-                class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-5 text-center mono text-xl text-indigo-300 font-bold outline-none cursor-text"
-                onclick="this.select();">
-            
-            <div id="copyToast" class="absolute top-0 right-0 mt-2 mr-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded opacity-0 transition-opacity">
-                COPIADO!
-            </div>
-        </div>
-        
-        <button onclick="gerarECopiar()" class="w-full group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-indigo-600 p-4 font-bold text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all hover:bg-indigo-500 hover:scale-[1.02]">
-            <span class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 opacity-0 transition-opacity group-hover:opacity-100 bg-[length:200%_auto] animate-gradient"></span>
-            <span class="relative flex items-center gap-2 uppercase tracking-wider">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" /></svg>
-                Gerar Nova Key
-            </span>
-        </button>
+    <div class="max-w-2xl mx-auto mt-8">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-white mb-6">PAINEL <span class="text-indigo-500 text-shadow-lg">FFH4X</span></h1>
+            
+            <div class="flex justify-center gap-8 border-b border-slate-700">
+                <button onclick="showTab('gerador')" id="btn-gerador" class="pb-3 px-4 font-bold transition tab-active uppercase text-xs tracking-widest">Gerador</button>
+                <button onclick="showTab('gestao')" id="btn-gestao" class="pb-3 px-4 font-bold transition text-slate-500 uppercase text-xs tracking-widest">Gerenciamento</button>
+            </div>
+        </div>
 
-        <p class="text-slate-500 text-xs mt-6">
-            Use esta key para desbloquear o painel `index.html`.
-        </p>
-    </div>
+        <div id="tab-gerador" class="space-y-6">
+            <div class="glass p-8 rounded-3xl shadow-2xl">
+                <div class="space-y-4 mb-8">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-[2px] text-slate-500 mb-2">Tempo de Acesso</label>
+                        <select id="validade-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="2H10M">2 Horas e 10 Minutos</option>
+                            <option value="1DIA">1 Dia</option>
+                            <option value="7DIA">7 Dias</option>
+                            <option value="15DIA">15 Dias</option>
+                            <option value="30DIA">30 Dias</option>
+                            <option value="PERMANENTE">Acesso Permanente</option>
+                        </select>
+                    </div>
 
-    <script>
-        function gerarECopiar() {
-            const output = document.getElementById('keyOutput');
-            const toast = document.getElementById('copyToast');
-            
-            // 1. Gera 6 números aleatórios e garante que tenha zeros à esquerda se necessário (ex: 001234)
-            const randomNumber = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-            const newKey = `SZFFH4X-${randomNumber}`;
-            
-            // 2. Mostra no input
-            output.value = newKey;
-            
-            // 3. Copia para a área de transferência
-            navigator.clipboard.writeText(newKey).then(() => {
-                // Mostra aviso de copiado
-                toast.classList.remove('opacity-0');
-                setTimeout(() => {
-                    toast.classList.add('opacity-0');
-                }, 2000);
-            });
-        }
-    </script>
+                    <button onclick="gerarKey()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-indigo-600/30">
+                        GERAR NOVA KEY
+                    </button>
+                </div>
+
+                <div id="resultado-container" class="hidden animate-in fade-in zoom-in duration-300">
+                    <div class="bg-slate-900/90 border border-indigo-500/30 p-6 rounded-2xl">
+                        <p class="text-green-400 font-bold text-sm mb-4">✓ Gerada com sucesso!</p>
+                        <div class="space-y-3 mb-6">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-slate-500 font-bold">KEY:</span>
+                                <span id="key-output" class="mono text-lg text-indigo-300 font-bold"></span>
+                            </div>
+                            <div class="flex justify-between border-t border-slate-800 pt-3 text-sm">
+                                <span>Modo: <b class="text-white">FFH4X</b></span>
+                                <span>Validade: <b id="validade-output" class="text-white"></b></span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="copiarApenasKey()" class="bg-slate-800 py-2 rounded-lg text-xs font-bold">Só Key</button>
+                            <button onclick="copiarTudo()" class="bg-indigo-600/20 text-indigo-400 py-2 rounded-lg text-xs font-bold border border-indigo-500/30">Completo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-gestao" class="hidden space-y-4">
+            <div class="flex justify-between items-center mb-2 px-2">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Chaves Ativas</h2>
+                <button onclick="limparHistorico()" class="text-[10px] text-red-400 hover:underline">Limpar Tudo</button>
+            </div>
+            
+            <div id="lista-keys" class="space-y-3">
+                </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Carregar do banco local ao abrir
+        let dbKeys = JSON.parse(localStorage.getItem('ffh4x_keys')) || [];
+
+        function showTab(tab) {
+            if(tab === 'gerador') {
+                document.getElementById('tab-gerador').classList.remove('hidden');
+                document.getElementById('tab-gestao').classList.add('hidden');
+                document.getElementById('btn-gerador').classList.add('tab-active');
+                document.getElementById('btn-gestao').classList.remove('tab-active');
+                document.getElementById('btn-gestao').classList.add('text-slate-500');
+            } else {
+                document.getElementById('tab-gerador').classList.add('hidden');
+                document.getElementById('tab-gestao').classList.remove('hidden');
+                document.getElementById('btn-gestao').classList.add('tab-active');
+                document.getElementById('btn-gestao').classList.remove('text-slate-500');
+                document.getElementById('btn-gerador').classList.remove('tab-active');
+                renderizarGestao();
+            }
+        }
+
+        function gerarKey() {
+            const num = Math.floor(100000 + Math.random() * 900000);
+            const key = `SZFFH4X-${num}`;
+            const validade = document.getElementById('validade-select').value;
+            const data = new Date().toLocaleDateString('pt-BR');
+
+            // Salvar no Banco Local
+            const novaKey = { key, validade, data, id: Date.now() };
+            dbKeys.unshift(novaKey);
+            localStorage.setItem('ffh4x_keys', JSON.stringify(dbKeys));
+
+            // Mostrar na Tela
+            document.getElementById('key-output').innerText = key;
+            document.getElementById('validade-output').innerText = validade;
+            document.getElementById('resultado-container').classList.remove('hidden');
+        }
+
+        function renderizarGestao() {
+            const container = document.getElementById('lista-keys');
+            container.innerHTML = '';
+
+            if(dbKeys.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-slate-600 text-sm italic">Nenhuma key gerada ainda.</div>`;
+                return;
+            }
+
+            dbKeys.forEach(item => {
+                container.innerHTML += `
+                    <div class="glass p-4 rounded-xl border-l-4 border-indigo-500 flex justify-between items-center">
+                        <div>
+                            <p class="mono text-indigo-300 font-bold text-sm">${item.key}</p>
+                            <p class="text-[10px] text-slate-500">${item.data} • Validade: ${item.validade}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="copiarTexto('${item.key}')" class="p-2 bg-slate-800 rounded hover:text-indigo-400 transition text-xs">📋</button>
+                            <button onclick="removerKey(${item.id})" class="p-2 bg-red-900/20 text-red-400 rounded hover:bg-red-900/40 transition text-xs">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function removerKey(id) {
+            dbKeys = dbKeys.filter(k => k.id !== id);
+            localStorage.setItem('ffh4x_keys', JSON.stringify(dbKeys));
+            renderizarGestao();
+        }
+
+        function limparHistorico() {
+            if(confirm("Deseja apagar todas as chaves geradas?")) {
+                dbKeys = [];
+                localStorage.setItem('ffh4x_keys', JSON.stringify(dbKeys));
+                renderizarGestao();
+            }
+        }
+
+        // Funções de Cópia
+        function copiarTexto(txt) {
+            navigator.clipboard.writeText(txt);
+            alert("Copiado!");
+        }
+
+        function copiarApenasKey() {
+            copiarTexto(document.getElementById('key-output').innerText);
+        }
+
+        function copiarTudo() {
+            const key = document.getElementById('key-output').innerText;
+            const validade = document.getElementById('validade-output').innerText;
+            const msg = `🚀 *Key FFH4X Gerada!*\n🔑 *Key:* \`${key}\` \n⏳ *Validade:* ${validade}`;
+            copiarTexto(msg);
+        }
+    </script>
 </body>
 </html>
