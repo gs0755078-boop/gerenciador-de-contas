@@ -1,143 +1,238 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador de Contas - FFH4X</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>FF Status - Painel Akira</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
-        .blur-content { filter: blur(15px); pointer-events: none; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .card-conta { transition: all 0.3s; border-left: 4px solid #1e293b; }
-        .black-active { border-left-color: #ef4444; background: rgba(239, 68, 68, 0.05); }
-        .on-active { border-left-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
+        :root { 
+            --primary: #f02849; 
+            --bg: #0b0e11; 
+            --card: #1c2128; 
+            --text: #ffffff; 
+            --gray: #8b949e;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+
+        .box { 
+            background: var(--card); 
+            padding: 30px; 
+            border-radius: 12px; 
+            width: 350px; 
+            text-align: center; 
+            border: 1px solid #30363d; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+        }
+
+        .btn-x { 
+            background: #000; 
+            color: white; 
+            border: 1px solid #333; 
+            padding: 12px; 
+            width: 100%; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            margin-top: 20px; 
+            transition: 0.3s;
+        }
+
+        .btn-x:hover { background: #111; }
+
+        .hidden { display: none; }
+
+        .status-box { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background: #0d1117; 
+            border-radius: 8px; 
+            border-left: 5px solid var(--primary); 
+            text-align: left; 
+        }
+
+        .on { color: #23d160; } 
+        .black { color: #ffdd57; } 
+        .ban { color: #ff3860; }
+
+        .user-info { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 20px; 
+            text-align: left; 
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 15px;
+        }
+
+        .user-info img { 
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            border: 2px solid var(--primary); 
+        }
+
+        .logout-link {
+            margin-top: 25px;
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 13px;
+        }
     </style>
 </head>
-<body class="text-slate-200 min-h-screen">
+<body>
 
-    <div id="lock-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/98">
-        <div class="glass max-w-md w-full p-8 rounded-3xl text-center shadow-2xl border-indigo-500/30 border">
-            <h2 class="text-2xl font-black mb-2 uppercase italic text-white">Acesso Restrito</h2>
-            <p class="text-slate-500 text-xs mb-8 uppercase tracking-widest font-bold">Insira sua Key FFH4X</p>
-            
-            <input type="text" id="key-input" placeholder="SZFFH4X-XXXXXX" 
-                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-4 text-center text-indigo-400 font-bold mb-4 outline-none focus:ring-2 focus:ring-indigo-500 transition-all uppercase">
-            
-            <button onclick="validarAcesso()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 uppercase text-sm">
-                Desbloquear Gerenciador
-            </button>
-            <p id="error-msg" class="text-red-500 text-[10px] mt-4 font-bold hidden uppercase tracking-tighter">Key não encontrada ou expirada no sistema!</p>
-        </div>
+    <div id="loginPage" class="box">
+        <h2 style="margin: 0 0 10px 0;">Consultar Conta FF</h2>
+        <p style="color: var(--gray); font-size: 14px;">Acesse com seu X para verificar o status de banimento ou blacklist.</p>
+        
+        <button class="btn-x" onclick="loginComX()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+            Entrar com X
+        </button>
     </div>
 
-    <main id="main-content" class="max-w-2xl mx-auto py-10 px-4 blur-content opacity-0 transition-all duration-1000">
-        <header class="text-center mb-10">
-            <h1 class="text-3xl font-black text-white italic">GERENCIADOR <span class="text-indigo-500">CONTINGÊNCIA</span></h1>
-            <p class="text-slate-500 text-[10px] uppercase tracking-[3px] font-bold mt-2">Controle de Blacklist 7 Dias</p>
-        </header>
-
-        <div class="glass p-4 rounded-2xl mb-8 flex gap-2">
-            <input type="text" id="accName" placeholder="Nome da conta..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 outline-none focus:border-indigo-500 text-sm">
-            <button onclick="addAcc()" class="bg-indigo-600 hover:bg-indigo-500 px-6 rounded-xl font-bold text-xs uppercase transition-colors">Add</button>
+    <div id="dashboard" class="box hidden">
+        <div class="user-info">
+            <img id="userPhoto" src="" alt="Avatar">
+            <div>
+                <div id="userName" style="font-weight: bold;"></div>
+                <div style="font-size: 12px; color: var(--gray);">Autenticado via X</div>
+            </div>
         </div>
 
-        <div id="listaContas" class="space-y-3"></div>
-    </main>
+        <div class="status-box">
+            <p style="font-size: 11px; margin: 0; color: var(--gray); text-transform: uppercase;">Status do Jogador:</p>
+            <h3 id="statusResult" style="margin: 5px 0;">ANALISANDO...</h3>
+            <p id="details" style="font-size: 13px; margin: 0; color: var(--gray);"></p>
+        </div>
+
+        <button onclick="logout()" class="logout-link">Sair da conta</button>
+    </div>
 
     <script>
-        // === LÓGICA DE CONEXÃO COM O GERADOR ===
-        function validarAcesso() {
-            const input = document.getElementById('key-input').value.trim().toUpperCase();
-            const error = document.getElementById('error-msg');
-            
-            // Pega a lista de chaves que o seu GERADOR criou
-            const chavesAtivas = JSON.parse(localStorage.getItem('ffh4x_keys')) || [];
-            
-            // Verifica se a chave digitada existe no histórico do gerador
-            const keyExiste = chavesAtivas.find(item => item.key.toUpperCase() === input);
+        // CONFIGURAÇÃO DO SEU FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyADWH-HdJUFByEuHBdHZkf7mDSD1-dBnRA",
+            authDomain: "cpx-akira.firebaseapp.com",
+            databaseURL: "https://cpx-akira-default-rtdb.firebaseio.com",
+            projectId: "cpx-akira",
+            storageBucket: "cpx-akira.firebasestorage.app",
+            messagingSenderId: "126066483108",
+            appId: "1:126066483108:web:49f39f30edbf1c6775eb31"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
 
-            if (keyExiste) {
-                document.getElementById('lock-screen').classList.add('hidden');
-                document.getElementById('main-content').classList.remove('blur-content', 'opacity-0');
-                sessionStorage.setItem('sessao_ativa', 'true');
-            } else {
-                error.classList.remove('hidden');
-                setTimeout(() => error.classList.add('hidden'), 3000);
+        // 1. PEDIR PERMISSÃO PARA NOTIFICAÇÕES
+        function pedirPermissao() {
+            if ("Notification" in window) {
+                Notification.requestPermission();
             }
         }
 
-        // === LÓGICA DO GERENCIADOR DE CONTAS ===
-        let contas = JSON.parse(localStorage.getItem('contingencia_db')) || [];
-
-        function addAcc() {
-            const name = document.getElementById('accName').value;
-            if(!name) return;
-            contas.unshift({ id: Date.now(), name, status: 'ON', blackStart: null });
-            document.getElementById('accName').value = '';
-            salvar();
-        }
-
-        function toggleBlack(id) {
-            const acc = contas.find(c => c.id === id);
-            if(acc.status === 'ON') {
-                acc.status = 'OFF';
-                acc.blackStart = Date.now();
-            } else {
-                acc.status = 'ON';
-                acc.blackStart = null;
+        // 2. ENVIAR NOTIFICAÇÃO QUANDO FICAR ON
+        function avisarQueEstaOn() {
+            if (Notification.permission === "granted") {
+                new Notification("FF Status - Akira", {
+                    body: "Sua conta já está ATIVA (ON)! Pode logar no Free Fire agora.",
+                    icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
+                });
             }
-            salvar();
         }
 
-        function salvar() {
-            localStorage.setItem('contingencia_db', JSON.stringify(contas));
-            render();
+        // 3. LOGAR COM X
+        function loginComX() {
+            const provider = new firebase.auth.TwitterAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    pedirPermissao();
+                    exibirPainel(result.user);
+                }).catch((error) => {
+                    alert("Erro no login: " + error.message);
+                });
         }
 
-        function formatTimer(start) {
-            const seteDias = 7 * 24 * 60 * 60 * 1000;
-            const diff = (start + seteDias) - Date.now();
-            if(diff <= 0) return "LIBERADO";
+        // 4. EXIBIR O PAINEL E GERAR O STATUS
+        function exibirPainel(user) {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('userName').innerText = user.displayName;
+            document.getElementById('userPhoto').src = user.photoURL;
+
+            const res = document.getElementById('statusResult');
+            const det = document.getElementById('details');
             
-            const d = Math.floor(diff / 86400000);
-            const h = Math.floor((diff % 86400000) / 3600000);
-            const m = Math.floor((diff % 3600000) / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            return `${d}d, ${h}h, ${m}m, ${s}s`;
-        }
+            // Lógica aleatória para demonstração
+            const sorteio = Math.random();
 
-        function render() {
-            const list = document.getElementById('listaContas');
-            list.innerHTML = '';
-            contas.forEach(c => {
-                const isOff = c.status === 'OFF';
-                list.innerHTML += `
-                    <div class="glass p-4 rounded-xl flex justify-between items-center card-conta ${isOff ? 'black-active' : 'on-active'}">
-                        <div>
-                            <h3 class="font-bold text-sm text-white">${c.name}</h3>
-                            ${isOff ? `<p class="text-[10px] text-red-400 font-mono mt-1 uppercase">Black: ${formatTimer(c.blackStart)}</p>` : `<p class="text-[10px] text-green-500 font-bold mt-1">STATUS: OPERANTE</p>`}
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="toggleBlack(${c.id})" class="text-[10px] font-black px-3 py-2 rounded-lg border ${isOff ? 'bg-red-500/20 border-red-500/50 text-red-500' : 'bg-green-500/20 border-green-500/50 text-green-500'}">
-                                ${isOff ? 'EM BLACK' : 'MARCAR BLACK'}
-                            </button>
-                            <button onclick="contas = contas.filter(x => x.id !== ${c.id}); salvar();" class="text-slate-600 hover:text-white px-2">✕</button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
+            if(sorteio > 0.6) {
+                res.innerText = "ATIVA (ON)"; res.className = "on";
+                det.innerText = "Nenhuma restrição detectada no servidor.";
+            } 
+            else if (sorteio > 0.3) {
+                // LÓGICA DA BLACKLIST (OFF) COM CRONÔMETRO
+                res.className = "black";
+                det.innerText = "Aguarde o término da análise de segurança.";
+                
+                // Definindo 3 dias para o cronômetro (mude para segundos se quiser testar rápido)
+                let tempoRestante = (3 * 24 * 60 * 60 * 1000); 
+                let dataFinal = new Date().getTime() + tempoRestante;
 
-        window.onload = () => {
-            if(sessionStorage.getItem('sessao_ativa')) {
-                document.getElementById('lock-screen').classList.add('hidden');
-                document.getElementById('main-content').classList.remove('blur-content', 'opacity-0');
+                const contagem = setInterval(function() {
+                    let agora = new Date().getTime();
+                    let distancia = dataFinal - agora;
+
+                    let d = Math.floor(distancia / (1000 * 60 * 60 * 24));
+                    let h = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    let m = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60));
+                    let s = Math.floor((distancia % (1000 * 60)) / 1000);
+
+                    res.innerText = `OFF (${d}d, ${h}hrs, ${m}min e ${s}seg)`;
+
+                    if (distancia < 0) {
+                        clearInterval(contagem);
+                        res.innerText = "ATIVA (ON)";
+                        res.className = "on";
+                        det.innerText = "Sua conta saiu da Blacklist!";
+                        avisarQueEstaOn(); // Dispara a notificação
+                    }
+                }, 1000);
+            } 
+            else {
+                res.innerText = "BANIDA"; res.className = "ban";
+                det.innerText = "Conta suspensa permanentemente por uso de software de terceiros.";
             }
-            setInterval(render, 1000);
-            render();
         }
+
+        function logout() {
+            auth.signOut().then(() => location.reload());
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) exibirPainel(user);
+        });
     </script>
 </body>
 </html>
